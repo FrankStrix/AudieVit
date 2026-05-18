@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify
+import os
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from config import Config
 from services.whisper_service import WhisperService
@@ -8,9 +9,11 @@ from services.tts_service import TTSService
 app = Flask(__name__)
 CORS(app)
 
+os.makedirs(Config.STORAGE_DIR, exist_ok=True)
+
 whisper = WhisperService(Config.WHISPER_MODEL)
 ollama = OllamaService(Config.OLLAMA_URL, Config.OLLAMA_MODEL)
-tts = TTSService(Config.PIPER_URL)
+tts = TTSService(Config.STORAGE_DIR)
 
 
 @app.route("/api/health", methods=["GET"])
@@ -23,7 +26,8 @@ def transcribe():
     if "audio" not in request.files:
         return jsonify({"error": "No audio file"}), 400
     audio = request.files["audio"]
-    text = whisper.transcribe(audio)
+    audio.save("_temp.webm")
+    text = whisper.transcribe("_temp.webm")
     return jsonify({"text": text})
 
 
@@ -39,8 +43,13 @@ def ask():
 def speak():
     data = request.get_json()
     text = data.get("text", "")
-    audio_path = tts.synthesize(text)
-    return jsonify({"audio_path": audio_path})
+    filename = tts.synthesize(text)
+    return jsonify({"filename": filename})
+
+
+@app.route("/api/audio/<filename>")
+def serve_audio(filename):
+    return send_from_directory(Config.STORAGE_DIR, filename)
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -48,8 +57,8 @@ def chat():
     data = request.get_json()
     prompt = data.get("prompt", "")
     response = ollama.ask(prompt)
-    audio_path = tts.synthesize(response)
-    return jsonify({"response": response, "audio_path": audio_path})
+    filename = tts.synthesize(response)
+    return jsonify({"response": response, "filename": filename})
 
 
 if __name__ == "__main__":

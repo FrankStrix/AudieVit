@@ -1,0 +1,42 @@
+== Aggiornamenti Progetto AudieVit ==
+
+[18/05/2026]
+
+- Creata struttura completa del progetto (backend, app, site, docs)
+- Backend: Flask API con route health/transcribe/ask/speak/chat
+- Backend: Servizi Whisper, Ollama, Piper TTS
+- Backend: Docker compose per Ollama + Piper
+- Sito: Next.js con Home, Chat, Documentazione
+- Sito: SQLite per cronologia chat (better-sqlite3)
+- App: Electron + React/Vite con registrazione audio
+- App: Componenti Recorder e Chat funzionanti
+- Init repository git
+
+[19/05/2026] — Adattamento per Vercel
+
+- Rimosso better-sqlite3 (non compatibile con serverless Vercel)
+- Aggiunto vercel.json config
+- Sito ora 100% statico (pagine generate al build time)
+- Nuova pagina /download per scaricare l'app
+- Homepage con CTA "Scarica l'App" in evidenza
+- Chat lato client (si connette a localhost:5000)
+- Configurato electron-builder per build Windows (NSIS installer)
+- Aggiunto "sign": false al build config
+- Aggiunto release/ e *.exe a .gitignore
+
+[19/05/2026] — Rewrite App UI + TTS funzionante
+
+- UI completamente rinnovata: tema scuro, gradienti viola, glassmorphism
+- Pulsante microfono animato con glow pulsante
+- Waveform a barre durante la registrazione
+- Indicatore di typing (3 pallini animati)
+- Bolle messaggio con avatar, animazioni slide-up, timestamp
+- Pulsante "Riascolta" per le risposte AI
+- Stati visivi: recording, transcribing, thinking, speaking
+- Indicatore stato backend (verde/giallo/rosso) nell'header
+- Sostituito Piper TTS con Edge-TTS (voce italiana Elsa)
+- Backend: /api/audio/<filename> per servire file audio
+- Backend: endpoint /api/chat unificato (trascrivi + rispondi + parla)
+- Aggiornato requirements.txt con edge-tts
+- Rimosso docker/piper (non più necessario)
+- Aggiornato README.md
