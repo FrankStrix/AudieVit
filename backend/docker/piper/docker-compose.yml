@@ -1,0 +1,11 @@
+services:
+  piper:
+    image: rhasspy/piper-tts:latest
+    container_name: audievit-piper
+    ports:
+      - "5001:5000"
+    volumes:
+      - piper_data:/data
+
+volumes:
+  piper_data:
