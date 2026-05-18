@@ -40,3 +40,7 @@
 - Aggiornato requirements.txt con edge-tts
 - Rimosso docker/piper (non più necessario)
 - Aggiornato README.md
+
+[19/05/2026] — Simple fix
+
+- fixato una route sul sito

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const releasesUrl = "https://github.com/matte/audievit/releases";
+const releasesUrl = "https://github.com/FrankStrix/audievit/releases";
 
 export default function DownloadPage() {
   return (
