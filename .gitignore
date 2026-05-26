@@ -14,3 +14,4 @@ release/
 *.exe
 .DS_Store
 Thumbs.db
+App/dist-electron
