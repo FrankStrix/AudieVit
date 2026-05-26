@@ -1,12 +1,16 @@
 import { app, BrowserWindow } from 'electron'
-//import * as path from 'node:path'
+import * as path from 'node:path'
 
 function createWindow () {
   const win = new BrowserWindow({
-    width: 800,
+    width: 950,
     height: 600,
+
+    titleBarStyle: 'hidden',        // Nasconde la barra del titolo
+    titleBarOverlay: false,         // Disabilita i bottoni di chiusura, minimizzazione e massimizzazione
+
     webPreferences: {
-      // preload: path.join(__dirname, 'preload.js')
+      preload: path.join(import.meta.dirname, 'preload.js')
     }
   })
 
@@ -14,7 +18,7 @@ function createWindow () {
   if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(process.env.VITE_DEV_SERVER_URL)
   } else {
-   // win.loadFile(path.join(__dirname, '../dist/index.html'))
+    win.loadFile(path.join(import.meta.dirname, '../dist/index.html'))
   }
 }
 
