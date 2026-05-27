@@ -1,0 +1,19 @@
+<aside class="sidebar">
+  <h3>Documentation</h3>
+  @for (section of sections; track section.id) {
+    <div class="section">
+      <button class="section-title" (click)="scrollTo(section.id)">
+        {{ section.label }}
+      </button>
+      @if (section.children) {
+        <div class="subsections">
+          @for (child of section.children; track child.id) {
+            <button class="subsection" (click)="scrollTo(child.id)">
+              {{ child.label }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+</aside>

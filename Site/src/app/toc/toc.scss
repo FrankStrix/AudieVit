@@ -1,0 +1,45 @@
+.toc {
+  width: 200px;
+  padding: 24px 16px;
+  border-left: 1px solid #e0e0e0;
+  font-size: 13px;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+
+  h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+    margin: 0 0 16px 0;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    margin-bottom: 4px;
+  }
+
+  button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 6px 8px;
+    border: none;
+    background: none;
+    color: #555;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 4px;
+
+    &:hover {
+      background: #f5f5ff;
+      color: #6c63ff;
+    }
+  }
+}

@@ -1,0 +1,67 @@
+<main class="content">
+  <section id="getting-started">
+    <h1>Getting Started</h1>
+    <p>Welcome to AudieVit! This guide will help you set up and run the voice assistant.</p>
+  </section>
+
+  <section id="installation">
+    <h2>Installation</h2>
+    <p>Clone the repository and install dependencies:</p>
+    <pre><code>git clone https://github.com/FrankStrix/AudieVit.git
+cd AudieVit/App
+npm install
+npm run dev</code></pre>
+    <p>Open <strong>http://localhost:1420</strong> in your browser.</p>
+  </section>
+
+  <section id="quick-start">
+    <h2>Quick Start</h2>
+    <p>Once the app is running, click <strong>"Start Listening"</strong> and grant microphone access. The TensorFlow.js model will load, and you can start speaking commands.</p>
+  </section>
+
+  <section id="voice-recognition">
+    <h1>Voice Recognition</h1>
+    <p>AudieVit uses the <strong>Speech Commands</strong> dataset by Google, running entirely in-browser via TensorFlow.js.</p>
+  </section>
+
+  <section id="how-it-works">
+    <h2>How It Works</h2>
+    <p>The app captures audio from your microphone, runs it through a pre-trained neural network, and classifies the spoken word. No data leaves your machine.</p>
+  </section>
+
+  <section id="tensorflow-setup">
+    <h2>TensorFlow Setup</h2>
+    <p>TensorFlow.js is loaded via CDN in <code>index.html</code>. The speech-commands model runs with the <code>BROWSER_FFT</code> backend.</p>
+  </section>
+
+  <section id="commands">
+    <h2>Supported Commands</h2>
+    <ul>
+      <li><strong>yes / no</strong> — confirmation</li>
+      <li><strong>up / down / left / right</strong> — directions</li>
+      <li><strong>stop / go</strong> — actions</li>
+      <li><strong>on / off</strong> — toggles</li>
+      <li><strong>zero — nine</strong> — numbers</li>
+    </ul>
+  </section>
+
+  <section id="api">
+    <h1>API Reference</h1>
+    <p>The code is split into simple service files under <code>src/services/</code>.</p>
+  </section>
+
+  <section id="audio-service">
+    <h2>Audio Service</h2>
+    <p>Handles microphone access via <code>getUserMedia</code>. Exposes <code>getMicrophone()</code> and <code>stopMicrophone()</code>.</p>
+  </section>
+
+  <section id="classifier">
+    <h2>Classifier</h2>
+    <p>Wraps the <code>speechCommands.create('BROWSER_FFT')</code> model. Provides <code>loadModel()</code>, <code>startListening()</code>, and <code>stopListening()</code>.</p>
+  </section>
+
+  <section id="tts">
+    <h2>Text To Speech</h2>
+    <p>Uses the Web Speech API (<code>speechSynthesis</code>) to speak responses. Simple <code>speak(text)</code> and <code>stopSpeaking()</code> functions.</p>
+  </section>
+</main>

@@ -1,0 +1,12 @@
+<aside class="toc">
+  <h3>On This Page</h3>
+  <ul>
+    @for (item of items; track item.id) {
+      <li>
+        <button (click)="scrollTo(item.id)">
+          {{ item.label }}
+        </button>
+      </li>
+    }
+  </ul>
+</aside>
