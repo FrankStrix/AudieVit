@@ -28,10 +28,15 @@ function setupRecognition(): SpeechRecognition | null {
     let interim = '';
     let final = '';
 
+    const threshold = 0.3;
+
     for (let i = 0; i < event.results.length; i++) {
       const result = event.results[i];
+      const confidence = result[0].confidence ?? 0;
       if (result.isFinal) {
-        final += result[0].transcript;
+        if (confidence >= threshold) {
+          final += result[0].transcript;
+        }
       } else {
         interim += result[0].transcript;
       }
