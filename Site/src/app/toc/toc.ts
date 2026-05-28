@@ -13,11 +13,14 @@ export interface TocItem {
 })
 export class TocComponent {
   items: TocItem[] = [
-    { id: 'installation', label: 'Installation' },
-    { id: 'how-it-works', label: 'How It Works' },
-    { id: 'commands', label: 'Supported Commands' },
-    { id: 'classifier', label: 'Classifier API' },
-    { id: 'tts', label: 'Speech Synthesis' },
+    { id: 'intro', label: 'Introduzione' },
+    { id: 'installazione', label: 'Installazione' },
+    { id: 'guida-uso', label: 'Guida all\'uso' },
+    { id: 'architettura', label: 'Architettura' },
+    { id: 'api-reference', label: 'API Reference' },
+    { id: 'sviluppo', label: 'Sviluppo' },
+    { id: 'faq', label: 'FAQ' },
+    { id: 'riferimenti', label: 'Riferimenti' },
   ];
 
   scrollTo(id: string) {

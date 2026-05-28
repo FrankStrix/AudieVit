@@ -1,67 +1,889 @@
 <main class="content">
-  <section id="getting-started">
-    <h1>Getting Started</h1>
-    <p>Welcome to AudieVit! This guide will help you set up and run the voice assistant.</p>
-  </section>
 
-  <section id="installation">
-    <h2>Installation</h2>
-    <p>Clone the repository and install dependencies:</p>
-    <pre><code>git clone https://github.com/FrankStrix/AudieVit.git
-cd AudieVit/App
-npm install
-npm run dev</code></pre>
-    <p>Open <strong>http://localhost:1420</strong> in your browser.</p>
-  </section>
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- INTRODUZIONE                                   -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="intro">
+    <h1>AudieVit</h1>
+    <p>
+      <strong>AudieVit</strong> è un assistente vocale AI che gira interamente
+      nel tuo browser, senza inviare dati a server esterni. Sfrutta le API
+      Web Speech del browser per il riconoscimento vocale (STT) e la sintesi
+      vocale (TTS), e si connette a un'istanza locale di
+      <a href="https://ollama.ai" target="_blank" rel="noopener">Ollama</a>
+      per generare risposte intelligenti.
+    </p>
 
-  <section id="quick-start">
-    <h2>Quick Start</h2>
-    <p>Once the app is running, click <strong>"Start Listening"</strong> and grant microphone access. The TensorFlow.js model will load, and you can start speaking commands.</p>
-  </section>
+    <div class="infobox info">
+      <strong>Privacy prima di tutto.</strong>
+      Tutto il processing avviene in locale: il microfono, il browser e il
+      modello AI sono sulla tua macchina. Nessun dato lascia il tuo computer.
+    </div>
 
-  <section id="voice-recognition">
-    <h1>Voice Recognition</h1>
-    <p>AudieVit uses the <strong>Speech Commands</strong> dataset by Google, running entirely in-browser via TensorFlow.js.</p>
-  </section>
-
-  <section id="how-it-works">
-    <h2>How It Works</h2>
-    <p>The app captures audio from your microphone, runs it through a pre-trained neural network, and classifies the spoken word. No data leaves your machine.</p>
-  </section>
-
-  <section id="tensorflow-setup">
-    <h2>TensorFlow Setup</h2>
-    <p>TensorFlow.js is loaded via CDN in <code>index.html</code>. The speech-commands model runs with the <code>BROWSER_FFT</code> backend.</p>
-  </section>
-
-  <section id="commands">
-    <h2>Supported Commands</h2>
+    <h2>Caratteristiche principali</h2>
     <ul>
-      <li><strong>yes / no</strong> — confirmation</li>
-      <li><strong>up / down / left / right</strong> — directions</li>
-      <li><strong>stop / go</strong> — actions</li>
-      <li><strong>on / off</strong> — toggles</li>
-      <li><strong>zero — nine</strong> — numbers</li>
+      <li><strong>Riconoscimento vocale</strong> — Trascrizione in tempo reale tramite Web Speech API</li>
+      <li><strong>Risposte AI</strong> — Generazione tramite Ollama (modello <code>llama2</code>)</li>
+      <li><strong>Sintesi vocale</strong> — Lettura ad alta voce delle risposte con voci naturali</li>
+      <li><strong>Multi-lingua</strong> — Rilevamento automatico e risposta in IT, EN, FR, ES, DE</li>
+      <li><strong>Streaming</strong> — Risposte in tempo reale carattere per carattere</li>
+      <li><strong>Cronologia</strong> — Conversazioni salvate in SQLite con persistenza su localStorage</li>
+      <li><strong>Interfaccia scura</strong> — UI moderna con tema scuro e animazioni fluide</li>
     </ul>
   </section>
 
-  <section id="api">
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- INSTALLAZIONE                                   -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="installazione">
+    <h1>Installazione</h1>
+
+    <section id="prerequisiti">
+      <h2>Prerequisiti</h2>
+      <p>Assicurati di avere i seguenti strumenti installati:</p>
+      <table class="param-table">
+        <thead>
+          <tr>
+            <th>Strumento</th>
+            <th>Versione minima</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="https://nodejs.org" target="_blank" rel="noopener">Node.js</a></td>
+            <td>18.x</td>
+            <td>Runtime JavaScript</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.npmjs.com/" target="_blank" rel="noopener">npm</a></td>
+            <td>9.x</td>
+            <td>Viene con Node.js</td>
+          </tr>
+          <tr>
+            <td><a href="https://ollama.ai" target="_blank" rel="noopener">Ollama</a></td>
+            <td>0.1.x</td>
+            <td>Server AI locale</td>
+          </tr>
+          <tr>
+            <td>Browser moderno</td>
+            <td>—</td>
+            <td>Chrome, Edge, Firefox o Safari (con <a href="https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition" target="_blank" rel="noopener">supporto Web Speech</a>)</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="installare-ollama">
+      <h2>Installare Ollama</h2>
+      <p>
+        Ollama è il server AI che esegue il modello linguistico in locale.
+        Scaricarlo dalla pagina ufficiale o usare il gestore di pacchetti:
+      </p>
+
+      <pre ngNonBindable><code># Linux (curl)
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# macOS (Homebrew)
+brew install ollama
+
+# Windows — scarica il installer da https://ollama.ai</code></pre>
+
+      <p>Dopo l'installazione, avvia il server e scarica il modello <code>llama2</code>:</p>
+
+      <pre ngNonBindable><code>ollama serve          # avvia il server in background
+ollama pull llama2    # scarica il modello</code></pre>
+
+      <div class="infobox tip">
+        <strong>Modelli alternativi.</strong>
+        Puoi usare qualsiasi modello supportato da Ollama. Modifica il nome
+        del modello nel file <code>App/src/services/ollama.ts</code> alla riga 15.
+        Modelli consigliati: <code>mistral</code>, <code>phi</code>, <code>llama3</code>.
+      </div>
+    </section>
+
+    <section id="scaricare-audievit">
+      <h2>Scaricare AudieVit</h2>
+      <p>Clona il repository e installa le dipendenze:</p>
+
+      <pre ngNonBindable><code>git clone https://github.com/FrankStrix/AudieVit.git
+cd AudieVit/App
+npm install</code></pre>
+    </section>
+
+    <section id="configurare-avviare">
+      <h2>Configurare e avviare</h2>
+      <p>
+        Assicurati che Ollama sia in esecuzione, poi avvia il dev server:
+      </p>
+
+      <pre ngNonBindable><code>npm run dev</code></pre>
+
+      <p>Apri il browser all'indirizzo <strong>http://localhost:1420</strong>.</p>
+
+      <div class="infobox note">
+        <strong>Proxy API.</strong>
+        Il server Vite è configurato per proxare le richieste
+        <code>/api/ollama/*</code> verso <code>localhost:11434</code>
+        (la porta predefinita di Ollama). Consulta
+        <code>App/vite.config.ts</code> per i dettagli.
+      </div>
+    </section>
+
+    <section id="build-produzione">
+      <h2>Build di produzione</h2>
+      <p>Per compilare l'applicazione per la distribuzione:</p>
+
+      <pre ngNonBindable><code>npm run build</code></pre>
+
+      <p>
+        L'output sarà nella cartella <code>App/dist/</code>. Puoi servirlo
+        con qualsiasi server HTTP statico:
+      </p>
+
+      <pre ngNonBindable><code>npm run preview</code></pre>
+    </section>
+  </section>
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- GUIDA ALL'USO                                   -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="guida-uso">
+    <h1>Guida all'uso</h1>
+
+    <section id="prima-schermata">
+      <h2>Prima schermata (Welcome)</h2>
+      <p>
+        All'avvio dell'app compare la <strong>welcome page</strong> con:
+      </p>
+      <ul>
+        <li>Il logo e il nome AudieVit</li>
+        <li>Il tagline <em>"Il tuo assistente vocale AI, locale e privato"</em></li>
+        <li>Una <strong>creator card</strong> con il profilo del creatore FrankStrix</li>
+        <li>Il pulsante <strong>"Iniziamo!"</strong> per entrare nell'app</li>
+      </ul>
+      <p>
+        Questa schermata viene mostrata una volta sola per sessione. Una
+        volta entrati, il pulsante <strong>"Nuova chat"</strong> nell'header
+        permette di iniziare una nuova sessione senza ripassare dalla welcome.
+      </p>
+    </section>
+
+    <section id="iniziare-conversazione">
+      <h2>Iniziare una conversazione</h2>
+      <p>
+        Una volta dentro l'app, il flusso di base è semplice:
+      </p>
+      <ol>
+        <li><strong>Premi "Inizia Ascolto"</strong> — il browser chiederà il permesso di accedere al microfono</li>
+        <li><strong>Parla</strong> — pronuncia la tua domanda o comando</li>
+        <li><strong>Attendi la risposta</strong> — l'AI risponderà con un testo che viene letto ad alta voce</li>
+        <li><strong>Continua</strong> — la conversazione rimane aperta. Premi "Inizia Ascolto" per fare una nuova domanda</li>
+      </ol>
+
+      <div class="infobox tip">
+        <strong>Consiglio:</strong> Parla chiaramente e a volume moderato per
+        una trascrizione più accurata. Evita rumori di fondo eccessivi.
+      </div>
+
+      <p>
+        Durante l'ascolto, il testo trascritto in tempo reale appare in
+        una barra nella parte inferiore della chat (<strong>"Sto Ascoltando..."</strong>).
+      </p>
+    </section>
+
+    <section id="riconoscimento-vocale">
+      <h2>Riconoscimento vocale (STT)</h2>
+      <p>
+        AudieVit utilizza l'API <strong>Web Speech</strong> del browser,
+        specificamente <code>SpeechRecognition</code> (con fallback
+        <code>webkitSpeechRecognition</code> per browser basati su Chromium).
+      </p>
+      <p>Caratteristiche dell'implementazione:</p>
+      <ul>
+        <li><strong>Riconoscimento continuo</strong> — rimane in ascolto finché non viene fermato manualmente o finché non riceve un risultato finale</li>
+        <li><strong>Risultati intermedi</strong> — mostra il riconoscimento in tempo reale mentre parli</li>
+        <li><strong>Auto-restart</strong> — se la connessione col microfono cade, il servizio tenta di riavviarsi automaticamente dopo 200 ms</li>
+        <li><strong>Soglia di confidenza</strong> — i risultati finali con confidenza inferiore a 0.3 vengono scartati</li>
+      </ul>
+    </section>
+
+    <section id="risposte-ai">
+      <h2>Risposte AI (Ollama)</h2>
+      <p>
+        Il testo trascritto viene inviato a un'istanza locale di Ollama
+        tramite una richiesta HTTP <code>POST /api/ollama/api/generate</code>.
+        La richiesta viene proxyata da Vite a <code>localhost:11434</code>.
+      </p>
+      <p>Il sistema invia a Ollama:</p>
+      <ul>
+        <li>Un <strong>system prompt</strong> che istruisce il modello a rispondere nella lingua rilevata, in modo conciso, e fornisce la data/ora italiana corrente</li>
+        <li>Le ultime 3 domande dell'utente come <strong>contesto</strong></li>
+        <li>La <strong>nuova domanda</strong></li>
+      </ul>
+      <p>
+        La risposta viene <strong>streaming</strong> carattere per carattere
+        e mostrata in tempo reale nell'interfaccia. Appena una frase è
+        completa (termina con <code>.!?</code>), viene accodata alla sintesi vocale.
+      </p>
+    </section>
+
+    <section id="sintesi-vocale">
+      <h2>Sintesi vocale (TTS)</h2>
+      <p>
+        AudieVit usa l'API <strong>SpeechSynthesis</strong> del browser per
+        leggere ad alta voce le risposte.
+      </p>
+      <p>Caratteristiche:</p>
+      <ul>
+        <li><strong>Coda di frasi</strong> — le frasi vengono accodate e lette in sequenza, con una pausa di 120 ms tra una frase e l'altra</li>
+        <li><strong>Sanificazione del testo</strong> — le entità HTML (<code>&amp;egrave;</code>, <code>&amp;agrave;</code>, ecc.) e la sintassi Markdown vengono convertiti o rimossi prima della lettura</li>
+        <li><strong>Lingua appropriata</strong> — la sintesi usa la voce corrispondente alla lingua rilevata (<code>it-IT</code>, <code>en-US</code>, <code>fr-FR</code>, <code>es-ES</code>, <code>de-DE</code>)</li>
+        <li><strong>Interruzione</strong> — se parli mentre l'assistente sta parlando, la sintesi viene interrotta e la nuova domanda viene processata</li>
+      </ul>
+    </section>
+
+    <section id="gestione-sessioni">
+      <h2>Gestione delle sessioni</h2>
+      <p>
+        AudieVit organizza le conversazioni in <strong>sessioni</strong>.
+        Ogni sessione contiene una serie di messaggi (domande e risposte).
+      </p>
+      <ul>
+        <li><strong>Cronologia</strong> — clicca su "Cronologia" nell'header per vedere l'elenco delle sessioni passate, ordinate dalla più recente</li>
+        <li><strong>Caricare una sessione</strong> — clicca su una sessione nella cronologia per riaprirla</li>
+        <li><strong>Nuova sessione</strong> — clicca "Nuova chat" per iniziare una nuova conversazione</li>
+        <li><strong>Cancellare tutto</strong> — nella cronologia, il pulsante "Cancella tutto" elimina tutte le sessioni e i messaggi</li>
+      </ul>
+
+      <div class="infobox note">
+        <strong>Persistenza automatica.</strong>
+        I messaggi vengono salvati automaticamente in <code>localStorage</code>
+        tramite SQLite (sql.js). Il salvataggio avviene con debounce di 2
+        secondi dopo l'ultimo messaggio, e immediatamente per le operazioni
+        critiche (cancellazione, cambio sessione).
+      </div>
+    </section>
+
+    <section id="rilevamento-lingua">
+      <h2>Rilevamento della lingua</h2>
+      <p>
+        AudieVit rileva automaticamente la lingua del tuo parlato usando
+        pattern regex. Le lingue supportate sono:
+      </p>
+      <table class="param-table">
+        <thead>
+          <tr>
+            <th>Lingua</th>
+            <th>Codice</th>
+            <th>Tag TTS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Italiano</td><td><code>it</code></td><td><code>it-IT</code></td></tr>
+          <tr><td>Inglese</td><td><code>en</code></td><td><code>en-US</code></td></tr>
+          <tr><td>Francese</td><td><code>fr</code></td><td><code>fr-FR</code></td></tr>
+          <tr><td>Spagnolo</td><td><code>es</code></td><td><code>es-ES</code></td></tr>
+          <tr><td>Tedesco</td><td><code>de</code></td><td><code>de-DE</code></td></tr>
+        </tbody>
+      </table>
+      <p>
+        L'inglese viene testato per primo (ha il pattern più esteso con
+        oltre 150 parole chiave). Se non viene rilevato, si procede con
+        gli altri pattern specifici per lingua (lettere accentate e parole
+        comuni). Se nessun pattern matcha, l'<strong>italiano</strong> è
+        la lingua predefinita.
+      </p>
+    </section>
+  </section>
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- ARCHITETTURA                                    -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="architettura">
+    <h1>Architettura del software</h1>
+
+    <section id="architettura-panoramica">
+      <h2>Panoramica</h2>
+      <p>
+        AudieVit segue un'architettura a tre strati:
+      </p>
+      <ol>
+        <li><strong>Frontend React</strong> — interfaccia utente e gestione dello stato</li>
+        <li><strong>Servizi browser</strong> — API Web Speech (STT/TTS), rilevamento lingua, client HTTP per Ollama</li>
+        <li><strong>Persistenza</strong> — SQLite in memoria (sql.js) con backup su localStorage</li>
+      </ol>
+
+      <pre ngNonBindable><code>┌─────────────────────────────────────────────────┐
+│                Browser (porta 1420)               │
+│                                                   │
+│  ┌─────────┐  ┌──────────┐  ┌──────────────────┐ │
+│  │  React   │  │ Web      │  │  sql.js (SQLite)  │ │
+│  │  UI      │◄─┤ Speech   │  │  + localStorage   │ │
+│  │          │  │ API      │  │                   │ │
+│  └────┬─────┘  └──────────┘  └──────────────────┘ │
+│       │                                            │
+│       │  HTTP (proxy Vite)                         │
+│       ▼                                            │
+│  ┌─────────┐                                       │
+│  │ Ollama   │  localhost:11434                     │
+│  │ (llama2) │                                       │
+│  └─────────┘                                       │
+└─────────────────────────────────────────────────┘</code></pre>
+    </section>
+
+    <section id="frontend">
+      <h2>Frontend (React + TypeScript + Vite)</h2>
+      <p>
+        L'applicazione è costruita con <strong>React 19</strong> e
+        <strong>TypeScript 5.8</strong>, bundlata con <strong>Vite 7</strong>.
+        Lo stile è gestito con <strong>Sass (SCSS)</strong>.
+      </p>
+      <p>
+        Il dev server Vite è configurato sulla <strong>porta 1420</strong>
+        con un proxy che inoltra le richieste <code>/api/ollama/*</code>
+        a Ollama (<code>localhost:11434</code>), riscrivendo il path.
+      </p>
+    </section>
+
+    <section id="servizi">
+      <h2>Servizi</h2>
+      <p>
+        La logica di business è suddivisa in moduli indipendenti nella
+        cartella <code>src/services/</code>. Ogni servizio è un modulo
+        TypeScript puro (nessuna dipendenza da React), il che li rende
+        facilmente testabili e riutilizzabili.
+      </p>
+    </section>
+
+    <section id="servizio-speechrecognition">
+      <h3>speechRecognition.ts</h3>
+      <p>
+        Incapsula l'API <code>SpeechRecognition</code> del browser.
+        Espone due funzioni:
+      </p>
+      <table class="param-table">
+        <thead>
+          <tr><th>Funzione</th><th>Descrizione</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>startListening(callbacks)</code></td>
+            <td>
+              Avvia l'ascolto. Accetta un oggetto con
+              <code>onFinal(text)</code> e <code>onInterim(text)</code>.
+              Il riconoscimento è continuo e si riavvia automaticamente
+              se la connessione cade.
+            </td>
+          </tr>
+          <tr>
+            <td><code>stopListening()</code></td>
+            <td>Ferma l'ascolto e rilascia le risorse.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="servizio-ollama">
+      <h3>ollama.ts</h3>
+      <p>
+        Gestisce la comunicazione con Ollama. Espone:
+      </p>
+      <table class="param-table">
+        <thead>
+          <tr><th>Funzione</th><th>Descrizione</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>generateResponse(question, onChunk?, history?)</code></td>
+            <td>
+              Invia una richiesta <code>POST</code> streaming a Ollama.
+              Il parametro <code>onChunk</code> riceve il testo completo
+              accumulato a ogni chunk. La funzione restituisce una Promise
+              con la risposta completa.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        La richiesta include un <strong>system prompt</strong> con la
+        lingua rilevata e la data/ora italiana, più il contesto delle
+        ultime 3 domande dell'utente.
+      </p>
+    </section>
+
+    <section id="servizio-tts">
+      <h3>textToSpeech.ts</h3>
+      <p>
+        Incapsula l'API <code>SpeechSynthesis</code>. Espone:
+      </p>
+      <table class="param-table">
+        <thead>
+          <tr><th>Funzione</th><th>Descrizione</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>speak(text, lang?)</code></td>
+            <td>
+              Legge il testo ad alta voce usando la lingua specificata
+              (o automaticamente rilevata). Restituisce una Promise che
+              si risolve quando la lettura è completa. Prima di parlare,
+              sanifica il testo (rimuove HTML, markdown, emoji).
+            </td>
+          </tr>
+          <tr>
+            <td><code>stopSpeaking()</code></td>
+            <td>Interrompe immediatamente la sintesi vocale.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="servizio-lingua">
+      <h3>language.ts</h3>
+      <p>
+        Rilevatore automatico di lingua basato su espressioni regolari.
+        L'inglese ha un pattern esteso di oltre 150 parole comuni. Per
+        le altre lingue, combina lettere accentate e parole chiave.
+      </p>
+      <table class="param-table">
+        <thead>
+          <tr><th>Funzione</th><th>Descrizione</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>detectLanguage(text)</code></td>
+            <td>
+              Analizza il testo e restituisce un oggetto
+              <code>LangInfo</code> con codice, nome italiano e tag TTS.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="servizio-database">
+      <h3>database.ts</h3>
+      <p>
+        Gestisce la persistenza tramite <strong>sql.js</strong> (SQLite
+        compilato in WebAssembly). Il database risiede in memoria e viene
+        salvato periodicamente su <code>localStorage</code> come stringa
+        Base64.
+      </p>
+      <p>Schema del database:</p>
+      <pre ngNonBindable><code>sessions
+├── id           INTEGER PRIMARY KEY AUTOINCREMENT
+└── created_at   TEXT NOT NULL
+
+messages
+├── id           INTEGER PRIMARY KEY AUTOINCREMENT
+├── session_id   INTEGER NOT NULL (FK → sessions.id)
+├── role         TEXT NOT NULL ('user' | 'assistant')
+├── content      TEXT NOT NULL
+└── created_at   TEXT NOT NULL</code></pre>
+      <p>Funzioni esportate:</p>
+      <table class="param-table">
+        <thead>
+          <tr><th>Funzione</th><th>Descrizione</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>initDatabase()</code></td><td>Inizializza SQLite e carica i dati salvati</td></tr>
+          <tr><td><code>createSession()</code></td><td>Crea una nuova sessione, restituisce l'ID</td></tr>
+          <tr><td><code>addMessage(sessionId, role, content)</code></td><td>Aggiunge un messaggio a una sessione</td></tr>
+          <tr><td><code>getSessionMessages(sessionId)</code></td><td>Restituisce tutti i messaggi di una sessione</td></tr>
+          <tr><td><code>getSessions()</code></td><td>Restituisce tutte le sessioni con preview</td></tr>
+          <tr><td><code>deleteSession(sessionId)</code></td><td>Elimina una sessione e i suoi messaggi</td></tr>
+          <tr><td><code>clearAllSessions()</code></td><td>Elimina tutte le sessioni e i messaggi</td></tr>
+          <tr><td><code>persistNow()</code></td><td>Salva immediatamente su localStorage</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="componenti">
+      <h2>Componenti React</h2>
+
+      <h3>App.tsx</h3>
+      <p>
+        Componente radice. Inizializza il database al mount e mostra una
+        schermata di caricamento (<em>"Caricamento database..."</em>) finché
+        SQLite non è pronto. Poi renderizza <code>VoiceAssistant</code>.
+      </p>
+
+      <h3>VoiceAssistant.tsx</h3>
+      <p>
+        Componente principale (455 righe). Gestisce l'intero stato
+        dell'applicazione:
+      </p>
+      <ul>
+        <li><strong>Pagine:</strong> <code>welcome</code> (schermata iniziale) e <code>app</code> (interfaccia principale)</li>
+        <li><strong>Viste:</strong> <code>chat</code> (conversazione) e <code>history</code> (cronologia sessioni)</li>
+        <li><strong>Stati:</strong> <code>idle</code>, <code>listening</code>, <code>processing</code>, <code>speaking</code></li>
+        <li><strong>Coda TTS:</strong> sistema di code che spezza le risposte in frasi e le legge in sequenza</li>
+        <li><strong>Streaming:</strong> mostra le risposte carattere per carattere mentre arrivano</li>
+      </ul>
+
+      <p>Il componente è strutturato in tre aree:</p>
+      <pre ngNonBindable><code>┌─────────────────────────────────────────────┐
+│ Header (brand + navigazione)                │
+├──────┬──────────────────────┬────────────────┤
+│ Tips │ Chat area            │ Tips           │
+│ left │ ┌──────────────────┐ │ right          │
+│      │ │ Messaggi chat     │ │               │
+│      │ │ (streaming,       │ │               │
+│      │ │  cronologia)      │ │               │
+│      │ └──────────────────┘ │               │
+│      │ [Listening zone]     │               │
+│      │ [Controls]           │               │
+├──────┴──────────────────────┴────────────────┤
+│ Footer (implicito)                           │
+└─────────────────────────────────────────────┘</code></pre>
+    </section>
+
+    <section id="proxy-networking">
+      <h2>Proxy e networking</h2>
+      <p>
+        La configurazione di Vite (<code>vite.config.ts</code>) definisce
+        un proxy per evitare problemi di CORS:
+      </p>
+      <pre ngNonBindable><code>server: &#123;
+  port: 1420,
+  proxy: &#123;
+    '/api/ollama': &#123;
+      target: 'http://localhost:11434',
+      changeOrigin: true,
+      rewrite: (path) => path.replace(/^\/api\/ollama/, ''),
+    &#125;,
+  &#125;,
+&#125;</code></pre>
+      <p>
+        In pratica, una richiesta a <code>/api/ollama/api/generate</code>
+        viene inoltrata a <code>http://localhost:11434/api/generate</code>.
+      </p>
+    </section>
+
+    <section id="persistenza-dati">
+      <h2>Persistenza dei dati</h2>
+      <p>
+        AudieVit utilizza <strong>sql.js</strong>, una build di SQLite
+        compilata in WebAssembly, per gestire la persistenza:
+      </p>
+      <ol>
+        <li>All'avvio, il database viene caricato da <code>localStorage</code> (chiave <code>audievit_v3_db</code>)</li>
+        <li>Se non esiste un salvataggio, viene creato un database vuoto con le tabelle</li>
+        <li>Ogni messaggio aggiunto attiva un salvataggio con <strong>debounce di 2 secondi</strong></li>
+        <li>Le operazioni critiche (cancellazione, cambio sessione) salvano <strong>immediatamente</strong></li>
+        <li>Il database viene esportato in Base64 e salvato in <code>localStorage</code></li>
+      </ol>
+
+      <div class="infobox warn">
+        <strong>Attenzione:</strong> I dati sono salvati nel
+        <code>localStorage</code> del browser. La cancellazione dei dati
+        del browser comporta la perdita della cronologia. Non esiste
+        sincronizzazione tra dispositivi.
+      </div>
+    </section>
+  </section>
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- API REFERENCE                                   -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="api-reference">
     <h1>API Reference</h1>
-    <p>The code is split into simple service files under <code>src/services/</code>.</p>
+
+    <section id="api-speechrecognition">
+      <h2>speechRecognition.ts</h2>
+
+      <h3>startListening(callbacks)</h3>
+      <p>
+        Avvia il riconoscimento vocale continuo. Il parametro
+        <code>callbacks</code> è un oggetto con:
+      </p>
+      <table class="param-table">
+        <thead>
+          <tr><th>Callback</th><th>Firma</th><th>Descrizione</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>onFinal</code></td>
+            <td><code>(text: string) => void</code></td>
+            <td>Chiamato quando un risultato finale è disponibile (confidenza &ge; 0.3)</td>
+          </tr>
+          <tr>
+            <td><code>onInterim</code></td>
+            <td><code>(text: string) => void</code></td>
+            <td>Chiamato con i risultati provvisori in tempo reale</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Il riconoscimento si riavvia automaticamente in caso di
+        disconnessione (<code>onend</code>), finché non viene chiamato
+        <code>stopListening()</code>.
+      </p>
+
+      <h3>stopListening()</h3>
+      <p>Interrompe il riconoscimento e rilascia l'istanza.</p>
+    </section>
+
+    <section id="api-ollama">
+      <h2>ollama.ts</h2>
+
+      <h3>generateResponse(question, onChunk?, history?)</h3>
+      <table class="param-table">
+        <thead>
+          <tr><th>Parametro</th><th>Tipo</th><th>Descrizione</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>question</code></td><td><code>string</code></td><td>Il testo della domanda</td></tr>
+          <tr><td><code>onChunk</code></td><td><code>(fullText: string) => void</code></td><td>Callback opzionale per lo streaming, chiamato con il testo accumulato</td></tr>
+          <tr><td><code>history</code></td><td><code>&#123; role: string; content: string &#125;[]</code></td><td>Messaggi precedenti per il contesto (ultimi 3 user)</td></tr>
+        </tbody>
+      </table>
+      <p>Restituisce <code>Promise&lt;string&gt;</code> con la risposta completa.</p>
+      <p>
+        Il system prompt è generato automaticamente e include:
+        lingua rilevata, data/ora italiana corrente, e l'istruzione
+        di rispondere in modo conciso.
+      </p>
+    </section>
+
+    <section id="api-tts">
+      <h2>textToSpeech.ts</h2>
+
+      <h3>speak(text, lang?)</h3>
+      <table class="param-table">
+        <thead>
+          <tr><th>Parametro</th><th>Tipo</th><th>Descrizione</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>text</code></td><td><code>string</code></td><td>Testo da leggere ad alta voce</td></tr>
+          <tr><td><code>lang</code></td><td><code>LangInfo</code></td><td>Opzionale. Se non specificato, la lingua viene rilevata automaticamente</td></tr>
+        </tbody>
+      </table>
+      <p>Restituisce <code>Promise&lt;void&gt;</code> che si risolve quando la lettura termina.</p>
+      <p>
+        Il testo viene sanificato prima della lettura: le entità HTML
+        vengono convertite, la sintassi Markdown e le emoji rimosse.
+      </p>
+
+      <h3>stopSpeaking()</h3>
+      <p>Interrompe immediatamente qualsiasi sintesi vocale in corso.</p>
+    </section>
+
+    <section id="api-lingua">
+      <h2>language.ts</h2>
+
+      <h3>Tipi</h3>
+      <pre ngNonBindable><code>type LangInfo = &#123;
+  code: string;    // 'it' | 'en' | 'fr' | 'es' | 'de'
+  name: string;    // 'italiano' | 'inglese' | ...
+  tts: string;     // 'it-IT' | 'en-US' | ...
+&#125;;</code></pre>
+
+      <h3>detectLanguage(text)</h3>
+      <table class="param-table">
+        <thead>
+          <tr><th>Parametro</th><th>Tipo</th><th>Descrizione</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>text</code></td><td><code>string</code></td><td>Il testo da analizzare</td></tr>
+        </tbody>
+      </table>
+      <p>Restituisce <code>LangInfo</code>. L'ordine di rilevamento è: inglese → italiano → francese → spagnolo → tedesco → italiano (default).</p>
+    </section>
+
+    <section id="api-database">
+      <h2>database.ts</h2>
+
+      <h3>initDatabase()</h3>
+      <p>Inizializza SQLite. Carica i dati da localStorage se presenti, altrimenti crea un database vuoto. Chiamare una sola volta all'avvio.</p>
+
+      <h3>createSession()</h3>
+      <p>Crea una nuova sessione con timestamp corrente. Restituisce l'<code>id</code> della sessione come number.</p>
+
+      <h3>addMessage(sessionId, role, content)</h3>
+      <p>Aggiunge un messaggio alla sessione specificata. <code>role</code> può essere <code>'user'</code> o <code>'assistant'</code>.</p>
+
+      <h3>getSessionMessages(sessionId)</h3>
+      <p>Restituisce un array di <code>Message[]</code> ordinati per <code>id</code> ascendente.</p>
+
+      <h3>getSessions()</h3>
+      <p>Restituisce un array di <code>Session[]</code> con la preview (primo messaggio utente), ordinati per id discendente.</p>
+
+      <h3>deleteSession(sessionId)</h3>
+      <p>Elimina la sessione e tutti i suoi messaggi. Salva immediatamente.</p>
+
+      <h3>clearAllSessions()</h3>
+      <p>Elimina tutte le sessioni e tutti i messaggi. Salva immediatamente.</p>
+
+      <h3>persistNow()</h3>
+      <p>Forza un salvataggio immediato su localStorage.</p>
+
+      <h3>Tipi</h3>
+      <pre ngNonBindable><code>interface Message &#123;
+  id: number;
+  session_id: number;
+  role: 'user' | 'assistant';
+  content: string;
+  created_at: string;
+&#125;
+
+interface Session &#123;
+  id: number;
+  created_at: string;
+  preview: string;
+&#125;</code></pre>
+    </section>
   </section>
 
-  <section id="audio-service">
-    <h2>Audio Service</h2>
-    <p>Handles microphone access via <code>getUserMedia</code>. Exposes <code>getMicrophone()</code> and <code>stopMicrophone()</code>.</p>
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- SVILUPPO                                       -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="sviluppo">
+    <h1>Sviluppo</h1>
+
+    <section id="struttura-progetto">
+      <h2>Struttura del progetto</h2>
+      <pre ngNonBindable><code>AudieVit/
+├── README.md
+├── App/                          # Applicazione principale (React + Vite)
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tsconfig.json
+│   ├── index.html
+│   ├── public/
+│   │   ├── sql-wasm.wasm         # SQLite WASM
+│   │   └── vite.svg
+│   └── src/
+│       ├── main.tsx              # Punto di ingresso React
+│       ├── App.tsx               # Componente radice
+│       ├── styles.scss           # Sistema di stili (819 righe)
+│       ├── components/
+│       │   └── VoiceAssistant.tsx # Componente principale
+│       ├── services/
+│       │   ├── database.ts       # SQLite + localStorage
+│       │   ├── language.ts       # Rilevamento lingua
+│       │   ├── ollama.ts         # Client Ollama
+│       │   ├── speechRecognition.ts  # Web Speech API STT
+│       │   └── textToSpeech.ts   # Web Speech API TTS
+│       └── types/
+│           ├── database.ts       # Interfacce Message e Session
+│           └── speech.d.ts       # Dichiarazioni SpeechRecognition
+│
+└── Site/                         # Sito di documentazione (Angular)
+    ├── package.json
+    ├── angular.json
+    ├── tsconfig.json
+    └── src/
+        └── app/
+            ├── header/           # Barra di navigazione
+            ├── sidebar/          # Menu laterale
+            ├── doc-content/      # Contenuto della documentazione
+            ├── toc/              # "On This Page"
+            └── footer/           # Piè di pagina</code></pre>
+    </section>
+
+    <section id="script-npm">
+      <h2>Script npm</h2>
+      <table class="param-table">
+        <thead>
+          <tr><th>Comando</th><th>Descrizione</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>npm run dev</code></td><td>Avvia il dev server su <code>localhost:1420</code></td></tr>
+          <tr><td><code>npm run build</code></td><td>Compila TypeScript e produce il bundle in <code>dist/</code></td></tr>
+          <tr><td><code>npm run preview</code></td><td>Serve il contenuto di <code>dist/</code> localmente</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="estendere">
+      <h2>Estendere AudieVit</h2>
+      <p>Alcune idee per personalizzare e migliorare l'assistente:</p>
+      <ul>
+        <li><strong>Cambiare modello AI:</strong> modifica il campo <code>model</code> in <code>ollama.ts</code> (riga 15)</li>
+        <li><strong>Aggiungere una lingua:</strong> aggiungi un nuovo pattern in <code>language.ts</code> seguendo la struttura esistente</li>
+        <li><strong>Personalizzare l'UI:</strong> modifica le variabili CSS in <code>styles.scss</code> (palette colori, raggi, transizioni)</li>
+        <li><strong>Integrare strumenti esterni:</strong> aggiungi chiamate API nel servizio Ollama o crea nuovi servizi</li>
+      </ul>
+    </section>
   </section>
 
-  <section id="classifier">
-    <h2>Classifier</h2>
-    <p>Wraps the <code>speechCommands.create('BROWSER_FFT')</code> model. Provides <code>loadModel()</code>, <code>startListening()</code>, and <code>stopListening()</code>.</p>
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- FAQ E RISOLUZIONE PROBLEMI                      -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="faq">
+    <h1>FAQ e risoluzione dei problemi</h1>
+
+    <section id="faq-microfono">
+      <h2>Il microfono non funziona</h2>
+      <ul>
+        <li>Assicurati di aver concesso il permesso al browser di accedere al microfono</li>
+        <li>Controlla che il microfono sia collegato e funzionante</li>
+        <li>Prova con un browser basato su Chromium (Chrome, Edge, Brave) — Firefox e Safari hanno limitazioni con l'API SpeechRecognition</li>
+        <li>Apri la console del browser (<kbd>F12</kbd>) per verificare eventuali errori</li>
+      </ul>
+    </section>
+
+    <section id="faq-ollama">
+      <h2>Ollama non risponde</h2>
+      <ul>
+        <li>Verifica che Ollama sia in esecuzione: <code>ollama ps</code></li>
+        <li>Controlla che il modello sia stato scaricato: <code>ollama list</code></li>
+        <li>Testa l'API direttamente: <code>curl -X POST http://localhost:11434/api/generate -d '&#123;"model":"llama2","prompt":"Ciao"&#125;'</code></li>
+        <li>Assicurati che la porta <code>11434</code> non sia bloccata da un firewall</li>
+        <li>Verifica la configurazione del proxy in <code>vite.config.ts</code></li>
+      </ul>
+    </section>
+
+    <section id="faq-tts">
+      <h2>La sintesi vocale non funziona</h2>
+      <ul>
+        <li>Verifica che il browser supporti <code>speechSynthesis</code> — la maggior parte dei browser moderni lo supportano</li>
+        <li>Controlla che il volume del sistema non sia muto</li>
+        <li>Alcuni browser richiedono un'interazione utente prima di poter usare la sintesi vocale — clicca un pulsante prima di parlare</li>
+      </ul>
+    </section>
+
+    <section id="faq-database">
+      <h2>La cronologia viene persa</h2>
+      <ul>
+        <li>I dati sono salvati in <code>localStorage</code> — non cancellare i dati del browser</li>
+        <li>La modalità di navigazione in incognito/navigazione privata perde i dati alla chiusura della finestra</li>
+        <li>Se il database è corrotto, puoi cancellarlo aprendo la console ed eseguendo: <code>localStorage.removeItem('audievit_v3_db')</code></li>
+      </ul>
+    </section>
+
+    <section id="faq-altro">
+      <h2>Altri problemi</h2>
+      <p>
+        Se incontri altri problemi, apri una segnalazione su
+        <a href="https://github.com/FrankStrix/AudieVit/issues" target="_blank" rel="noopener">GitHub Issues</a>
+        includendo:
+      </p>
+      <ul>
+        <li>Il tuo browser e sistema operativo</li>
+        <li>Il contenuto della console del browser (<kbd>F12</kbd> → Console)</li>
+        <li>La versione di Node.js e npm</li>
+        <li>La versione di Ollama e il modello usato</li>
+      </ul>
+    </section>
   </section>
 
-  <section id="tts">
-    <h2>Text To Speech</h2>
-    <p>Uses the Web Speech API (<code>speechSynthesis</code>) to speak responses. Simple <code>speak(text)</code> and <code>stopSpeaking()</code> functions.</p>
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- RIFERIMENTI                                     -->
+  <!-- ─────────────────────────────────────────────── -->
+  <section id="riferimenti">
+    <h1>Riferimenti</h1>
+    <ul>
+      <li><strong>Repository:</strong> <a href="https://github.com/FrankStrix/AudieVit" target="_blank" rel="noopener">github.com/FrankStrix/AudieVit</a></li>
+      <li><strong>Ollama:</strong> <a href="https://ollama.ai" target="_blank" rel="noopener">ollama.ai</a></li>
+      <li><strong>React:</strong> <a href="https://react.dev" target="_blank" rel="noopener">react.dev</a></li>
+      <li><strong>Vite:</strong> <a href="https://vitejs.dev" target="_blank" rel="noopener">vitejs.dev</a></li>
+      <li><strong>sql.js:</strong> <a href="https://sql.js.org" target="_blank" rel="noopener">sql.js.org</a></li>
+      <li><strong>Web Speech API (MDN):</strong> <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API" target="_blank" rel="noopener">MDN Web Docs</a></li>
+      <li><strong>Angular:</strong> <a href="https://angular.dev" target="_blank" rel="noopener">angular.dev</a></li>
+    </ul>
   </section>
+
 </main>

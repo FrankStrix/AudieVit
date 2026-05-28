@@ -1,35 +1,40 @@
 .sidebar {
-  width: 240px;
-  padding: 24px 16px;
+  width: 260px;
+  padding: 24px 12px;
   border-right: 1px solid #e0e0e0;
   overflow-y: auto;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  max-height: 100vh;
 
   h3 {
-    font-size: 13px;
+    font-size: 12px;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #888;
+    letter-spacing: 0.08em;
+    color: #999;
     margin: 0 0 16px 0;
     padding: 0 8px;
   }
 }
 
 .section {
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 }
 
 .section-title {
   display: block;
   width: 100%;
   text-align: left;
-  padding: 8px 12px;
+  padding: 7px 10px;
   border: none;
   background: none;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   color: #1a1a2e;
   cursor: pointer;
   border-radius: 6px;
+  transition: background 0.15s;
 
   &:hover {
     background: #f0f0ff;
@@ -37,20 +42,23 @@
 }
 
 .subsections {
-  margin-left: 8px;
+  margin: 2px 0 4px 8px;
+  border-left: 1px solid #e8e8f0;
+  padding-left: 4px;
 }
 
 .subsection {
   display: block;
   width: 100%;
   text-align: left;
-  padding: 6px 12px;
+  padding: 5px 10px;
   border: none;
   background: none;
-  font-size: 13px;
+  font-size: 12.5px;
   color: #555;
   cursor: pointer;
   border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
 
   &:hover {
     background: #f5f5ff;
