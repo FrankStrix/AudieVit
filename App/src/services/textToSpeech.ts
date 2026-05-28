@@ -1,4 +1,5 @@
 import { detectLanguage } from './language';
+import type { LangInfo } from './language';
 
 function sanitize(text: string): string {
   return text
@@ -19,16 +20,26 @@ function sanitize(text: string): string {
     .trim();
 }
 
-export function speak(text: string): Promise<void> {
+export function speak(text: string, lang?: LangInfo): Promise<void> {
   const clean = sanitize(text);
-  const lang = detectLanguage(clean);
+  if (!clean) return Promise.resolve();
+
+  const ttsLang = lang || detectLanguage(clean);
+
   return new Promise((resolve) => {
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+    }
+
     const utterance = new SpeechSynthesisUtterance(clean);
-    utterance.lang = lang.tts;
+    utterance.lang = ttsLang.tts;
     utterance.rate = 1;
     utterance.onend = () => resolve();
     utterance.onerror = () => resolve();
-    speechSynthesis.speak(utterance);
+
+    setTimeout(() => {
+      speechSynthesis.speak(utterance);
+    }, 30);
   });
 }
 

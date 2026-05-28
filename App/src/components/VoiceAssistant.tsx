@@ -2,6 +2,8 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { startListening, stopListening } from '../services/speechRecognition';
 import { generateResponse } from '../services/ollama';
 import { speak, stopSpeaking } from '../services/textToSpeech';
+import { detectLanguage } from '../services/language';
+import type { LangInfo } from '../services/language';
 import {
   createSession, addMessage, getSessionMessages,
   getSessions, clearAllSessions, persistNow,
@@ -43,11 +45,57 @@ function VoiceAssistant() {
   const pendingTextRef = useRef('');
   const statusRef = useRef(status);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const ttsQueueRef = useRef<string[]>([]);
+  const speakingRef = useRef(false);
+  const spokenOffsetRef = useRef(0);
+  const queueDrainResolveRef = useRef<(() => void) | null>(null);
+  const currentTtsLangRef = useRef<LangInfo>({ code: 'it', name: 'italiano', tts: 'it-IT' });
   statusRef.current = status;
 
   const refreshSessions = useCallback(() => {
     setSessions(getSessions());
   }, []);
+
+  function splitChunks(text: string, maxLen = 200): string[] {
+    if (text.length <= maxLen) return [text];
+    const chunks: string[] = [];
+    let i = 0;
+    while (i < text.length) {
+      let end = Math.min(i + maxLen, text.length);
+      if (end < text.length) {
+        const brk = text.lastIndexOf(' ', end);
+        if (brk > i) end = brk;
+      }
+      chunks.push(text.slice(i, end).trim());
+      i = end;
+    }
+    return chunks;
+  }
+
+  function speakNext() {
+    if (speakingRef.current) return;
+    const text = ttsQueueRef.current.shift();
+    if (!text) {
+      speakingRef.current = false;
+      queueDrainResolveRef.current?.();
+      queueDrainResolveRef.current = null;
+      return;
+    }
+    speakingRef.current = true;
+    speak(text, currentTtsLangRef.current).then(() => {
+      speakingRef.current = false;
+      setTimeout(speakNext, 120);
+    });
+  }
+
+  function waitForQueueDrain(): Promise<void> {
+    if (ttsQueueRef.current.length === 0 && !speakingRef.current) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve) => {
+      queueDrainResolveRef.current = resolve;
+    });
+  }
 
   useEffect(() => {
     if (page === 'app') refreshSessions();
@@ -98,6 +146,10 @@ function VoiceAssistant() {
       const history = messages.map((m) => ({ role: m.role, content: m.content }));
 
       setStreamingText('');
+      ttsQueueRef.current = [];
+      speakingRef.current = false;
+      spokenOffsetRef.current = 0;
+      currentTtsLangRef.current = detectLanguage(text);
       setMessages((prev) => [...prev, { id: -1, session_id: sid!, role: 'user', content: text, created_at: new Date().toISOString() }]);
       setStatus('processing');
 
@@ -108,9 +160,31 @@ function VoiceAssistant() {
         await generateResponse(
           text,
           (fullText) => {
+            if (!processingRef.current) return;
             fullAnswer = fullText;
             setStreamingText(fullText);
-            setStatus('speaking');
+
+            const pending = fullText.slice(spokenOffsetRef.current);
+            const sentenceRegex = /(.*?[.!?](\s|$))/g;
+            let match: RegExpExecArray | null;
+            let consumed = 0;
+
+            while ((match = sentenceRegex.exec(pending)) !== null) {
+              const sentence = match[1].trim();
+              if (sentence && /[.!?]$/.test(sentence)) {
+                const chunks = splitChunks(sentence);
+                ttsQueueRef.current.push(...chunks);
+                consumed = match.index + match[0].length;
+              } else {
+                break;
+              }
+            }
+
+            if (consumed > 0) {
+              spokenOffsetRef.current += consumed;
+            }
+
+            speakNext();
           },
           history,
         );
@@ -124,7 +198,16 @@ function VoiceAssistant() {
         persistNow();
         refreshSessions();
 
-        await speak(fullAnswer);
+        if (spokenOffsetRef.current < fullAnswer.length) {
+          const remaining = fullAnswer.slice(spokenOffsetRef.current).trim();
+          if (remaining) {
+            const chunks = splitChunks(remaining);
+            ttsQueueRef.current.push(...chunks);
+            spokenOffsetRef.current = fullAnswer.length;
+          }
+        }
+        speakNext();
+        await waitForQueueDrain();
       } catch (err) {
         if (!processingRef.current) return;
         setError(String(err));
@@ -169,17 +252,19 @@ function VoiceAssistant() {
   function handleStop() {
     const pending = pendingTextRef.current;
 
-    if (status === 'speaking') {
+    if (status === 'speaking' || status === 'processing') {
       stopSpeaking();
+      ttsQueueRef.current = [];
+      speakingRef.current = false;
+      spokenOffsetRef.current = 0;
       processingRef.current = false;
       stopListening();
       setInterimText('');
       pendingTextRef.current = '';
+      setStreamingText('');
       setStatus('idle');
       return;
     }
-
-    if (status === 'processing') return;
 
     stopListening();
     pendingTextRef.current = '';
@@ -200,8 +285,8 @@ function VoiceAssistant() {
     speaking: 'Parla...',
   };
 
-  const buttonDisabled = status === 'processing';
-  const buttonLabel = status === 'processing' ? 'Elaborazione...' : 'Ferma';
+  const buttonDisabled = status === 'idle';
+  const buttonLabel = status === 'processing' ? 'Ferma (elaborazione)' : 'Ferma';
 
   if (page === 'welcome') {
     return (

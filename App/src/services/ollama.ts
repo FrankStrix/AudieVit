@@ -14,7 +14,7 @@ export async function generateResponse(
     body: JSON.stringify({
       model: 'llama2',
       prompt,
-      system: `Rispondi sempre in ${lang.name}. Sii conciso, risposte brevi ma giuste.`,
+      system: `Rispondi sempre in ${lang.name}. Sii conciso, risposte brevi ma giuste. sappi che la data e ora attuali sono: ${new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })} (ora italiana).`,
       stream: true,
     }),
   });
@@ -49,9 +49,13 @@ export async function generateResponse(
 function buildPrompt(question: string, history?: { role: string; content: string }[]): string {
   if (!history || history.length === 0) return question;
 
-  const lines = history.map((m) => {
-    return `${m.content}`;
-  });
-  lines.push(`Utente: ${question}`);
-  return lines.join('\n\n');
+  const userMessages = history
+    .filter((m) => m.role === 'user')
+    .slice(-3)
+    .map((m) => m.content);
+
+  if (userMessages.length === 0) return question;
+
+  const context = userMessages.join(' → ');
+  return `Domande precedenti: ${context}\n\nNuova domanda: ${question}`;
 }
