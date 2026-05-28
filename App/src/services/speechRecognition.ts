@@ -1,7 +1,10 @@
-type SpeechRecognitionCallback = (text: string) => void;
+type SpeechRecognitionCallbacks = {
+  onFinal: (text: string) => void;
+  onInterim: (text: string) => void;
+};
 
 let recognition: SpeechRecognition | null = null;
-let onResultCallback: SpeechRecognitionCallback | null = null;
+let callbacks: SpeechRecognitionCallbacks | null = null;
 let isListening = false;
 
 function getSpeechRecognition(): SpeechRecognition | null {
@@ -13,46 +16,69 @@ function getSpeechRecognition(): SpeechRecognition | null {
   return new (SpeechRecognitionAPI as new () => SpeechRecognition)();
 }
 
-export function startListening(onResult: SpeechRecognitionCallback): void {
-  if (isListening) return;
-
+function setupRecognition(): SpeechRecognition | null {
   const instance = getSpeechRecognition();
-  if (!instance) {
-    console.warn('SpeechRecognition not supported in this browser');
-    return;
-  }
+  if (!instance) return null;
 
-  recognition = instance;
-  onResultCallback = onResult;
-  isListening = true;
+  instance.continuous = true;
+  instance.interimResults = true;
+  instance.lang = 'it-IT';
 
-  recognition.continuous = true;
-  recognition.interimResults = false;
-  recognition.lang = 'it-IT';
+  instance.onresult = (event: SpeechRecognitionEvent) => {
+    let interim = '';
+    let final = '';
 
-  recognition.onresult = (event: SpeechRecognitionEvent) => {
-    const last = event.results[event.results.length - 1];
-    if (last.isFinal) {
-      const transcript = last[0].transcript.trim();
-      if (transcript) {
-        onResultCallback?.(transcript);
+    for (let i = 0; i < event.results.length; i++) {
+      const result = event.results[i];
+      if (result.isFinal) {
+        final += result[0].transcript;
+      } else {
+        interim += result[0].transcript;
+      }
+    }
+
+    if (interim) {
+      callbacks?.onInterim(interim.trim());
+    }
+    if (final) {
+      const text = final.trim();
+      if (text) {
+        callbacks?.onFinal(text);
       }
     }
   };
 
-  recognition.onerror = () => {
+  instance.onerror = (event: SpeechRecognitionErrorEvent) => {
+    if (event.error === 'no-speech' || event.error === 'aborted') return;
     isListening = false;
   };
 
-  recognition.onend = () => {
+  instance.onend = () => {
     if (isListening && recognition) {
-      try {
-        recognition.start();
-      } catch {
-        isListening = false;
-      }
+      setTimeout(() => {
+        if (isListening && recognition) {
+          try {
+            recognition.start();
+          } catch {
+            isListening = false;
+          }
+        }
+      }, 200);
     }
   };
+
+  return instance;
+}
+
+export function startListening(cbs: SpeechRecognitionCallbacks): void {
+  if (isListening) return;
+
+  const instance = setupRecognition();
+  if (!instance) return;
+
+  recognition = instance;
+  callbacks = cbs;
+  isListening = true;
 
   try {
     recognition.start();
@@ -63,7 +89,7 @@ export function startListening(onResult: SpeechRecognitionCallback): void {
 
 export function stopListening(): void {
   isListening = false;
-  onResultCallback = null;
+  callbacks = null;
   if (recognition) {
     try {
       recognition.stop();

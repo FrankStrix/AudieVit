@@ -165,6 +165,57 @@ body {
   color: #fff;
 }
 
+.message.interim {
+  color: #888;
+  font-style: italic;
+  min-height: 1.5em;
+}
+
+.mic-visualizer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  min-height: 48px;
+}
+
+.mic-icon {
+  color: #555;
+  transition: color 0.2s;
+}
+
+.mic-active {
+  color: #2ecc71;
+}
+
+.sound-waves {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 32px;
+}
+
+.sound-waves span {
+  display: block;
+  width: 4px;
+  height: 100%;
+  background: #2ecc71;
+  border-radius: 2px;
+  animation: wave 1.2s ease-in-out infinite;
+}
+
+.sound-waves span:nth-child(1) { animation-delay: 0s; height: 30%; }
+.sound-waves span:nth-child(2) { animation-delay: 0.15s; height: 60%; }
+.sound-waves span:nth-child(3) { animation-delay: 0.3s; height: 100%; }
+.sound-waves span:nth-child(4) { animation-delay: 0.45s; height: 60%; }
+.sound-waves span:nth-child(5) { animation-delay: 0.6s; height: 30%; }
+
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
 .controls {
   display: flex;
   justify-content: center;

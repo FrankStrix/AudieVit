@@ -13,6 +13,7 @@ type Status = 'idle' | 'listening' | 'processing' | 'speaking';
 
 function VoiceAssistant({ userName }: VoiceAssistantProps) {
   const [status, setStatus] = useState<Status>('idle');
+  const [interimText, setInterimText] = useState('');
   const [lastQuestion, setLastQuestion] = useState('');
   const [lastAnswer, setLastAnswer] = useState('');
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -27,11 +28,12 @@ function VoiceAssistant({ userName }: VoiceAssistantProps) {
     refreshConversations();
   }, [refreshConversations]);
 
-  const handleTranscript = useCallback(
+  const handleFinal = useCallback(
     async (text: string) => {
       if (processingRef.current) return;
       processingRef.current = true;
 
+      setInterimText('');
       setLastQuestion(text);
       setLastAnswer('');
       setStatus('processing');
@@ -59,17 +61,30 @@ function VoiceAssistant({ userName }: VoiceAssistantProps) {
     [userName, refreshConversations],
   );
 
+  const handleInterim = useCallback((text: string) => {
+    setInterimText(text);
+  }, []);
+
   function handleStart() {
     setError('');
+    setInterimText('');
     setStatus('listening');
-    startListening(handleTranscript);
+    startListening({ onFinal: handleFinal, onInterim: handleInterim });
   }
 
   function handleStop() {
     stopListening();
     processingRef.current = false;
+    setInterimText('');
     setStatus('idle');
   }
+
+  const statusLabel = {
+    idle: 'In attesa',
+    listening: 'In ascolto...',
+    processing: 'Elaborazione...',
+    speaking: 'Parla...',
+  };
 
   return (
     <div className="assistant-container">
@@ -82,10 +97,29 @@ function VoiceAssistant({ userName }: VoiceAssistantProps) {
 
       <div className="status-bar">
         <span className={`status-dot status-${status}`} />
-        <span>{status === 'idle' ? 'In attesa' : status === 'listening' ? 'In ascolto...' : status === 'processing' ? 'Elaborazione...' : 'Parla...'}</span>
+        <span>{statusLabel[status]}</span>
       </div>
 
       <section className="conversation">
+        <div className="mic-visualizer">
+          <div className={`mic-icon ${status === 'listening' ? 'mic-active' : ''}`}>
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+            </svg>
+          </div>
+          {status === 'listening' && (
+            <div className="sound-waves">
+              <span /><span /><span /><span /><span />
+            </div>
+          )}
+        </div>
+
+        {interimText && (
+          <div className="message interim">
+            <em>{interimText}</em>
+          </div>
+        )}
         {lastQuestion && (
           <div className="message question">
             <strong>Tu:</strong> {lastQuestion}
