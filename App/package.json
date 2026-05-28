@@ -1,7 +1,7 @@
 {
   "name": "audievit",
   "private": true,
-  "version": "0.4.3",
+  "version": "0.7.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -18,6 +18,7 @@
     "@types/react-dom": "^19.1.6",
     "@types/sql.js": "^1.4.11",
     "@vitejs/plugin-react": "^4.6.0",
+    "sass": "^1.100.0",
     "typescript": "~5.8.3",
     "vite": "^7.0.4"
   }
