@@ -1,9 +1,13 @@
 import initSqlJs, { Database as SqlJsDatabase } from 'sql.js';
 import type { Conversation } from '../types/database';
 
-const DB_KEY = 'audievit_db';
+const DB_KEY = 'audievit_v2_db';
 
 let db: SqlJsDatabase | null = null;
+
+export function getFirstWords(text: string, count: number): string {
+  return text.split(/\s+/).slice(0, count).join(' ');
+}
 
 async function loadWasm(): Promise<SqlJsDatabase> {
   const SQL = await initSqlJs({
@@ -24,10 +28,9 @@ async function loadWasm(): Promise<SqlJsDatabase> {
   database.run(`
     CREATE TABLE IF NOT EXISTS conversations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_name TEXT NOT NULL,
-      question TEXT NOT NULL,
-      answer TEXT,
-      created_at TEXT NOT NULL
+      orario TEXT NOT NULL,
+      domanda TEXT NOT NULL,
+      risposta_prima_parte TEXT
     )
   `);
   persist(database);
@@ -44,40 +47,36 @@ export async function initDatabase(): Promise<void> {
   db = await loadWasm();
 }
 
-export function addConversation(
-  userName: string,
-  question: string,
-  answer: string | null,
-): number {
+export function addConversation(domanda: string): number {
   if (!db) throw new Error('Database not initialized');
-  const createdAt = new Date().toISOString();
+  const orario = new Date().toISOString();
   db.run(
-    'INSERT INTO conversations (user_name, question, answer, created_at) VALUES (?, ?, ?, ?)',
-    [userName, question, answer, createdAt],
+    'INSERT INTO conversations (orario, domanda) VALUES (?, ?)',
+    [orario, domanda],
   );
   persist(db);
   const result = db.exec('SELECT last_insert_rowid()');
   return result[0].values[0][0] as number;
 }
 
-export function updateAnswer(id: number, answer: string): void {
+export function updateRisposta(id: number, risposta: string): void {
   if (!db) throw new Error('Database not initialized');
-  db.run('UPDATE conversations SET answer = ? WHERE id = ?', [answer, id]);
+  const parte = getFirstWords(risposta, 3);
+  db.run('UPDATE conversations SET risposta_prima_parte = ? WHERE id = ?', [parte, id]);
   persist(db);
 }
 
 export function getConversations(): Conversation[] {
   if (!db) return [];
   const result = db.exec(
-    'SELECT id, user_name, question, answer, created_at FROM conversations ORDER BY created_at DESC',
+    'SELECT id, orario, domanda, risposta_prima_parte FROM conversations ORDER BY id DESC',
   );
   if (result.length === 0) return [];
   return result[0].values.map((row: unknown[]) => ({
     id: row[0] as number,
-    user_name: row[1] as string,
-    question: row[2] as string,
-    answer: row[3] as string | null,
-    created_at: row[4] as string,
+    orario: row[1] as string,
+    domanda: row[2] as string,
+    risposta_prima_parte: row[3] as string | null,
   }));
 }
 

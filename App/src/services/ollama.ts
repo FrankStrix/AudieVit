@@ -5,6 +5,7 @@ export async function generateResponse(prompt: string): Promise<string> {
     body: JSON.stringify({
       model: 'llama2',
       prompt,
+      system: 'Rispondi sempre in italiano.',
       stream: false,
     }),
   });

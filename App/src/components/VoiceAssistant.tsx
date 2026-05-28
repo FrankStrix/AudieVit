@@ -1,24 +1,23 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { startListening, stopListening } from '../services/speechRecognition';
 import { generateResponse } from '../services/ollama';
-import { speak } from '../services/textToSpeech';
-import { addConversation, updateAnswer, getConversations } from '../services/database';
+import { speak, stopSpeaking } from '../services/textToSpeech';
+import { addConversation, updateRisposta, getConversations } from '../services/database';
 import type { Conversation } from '../types/database';
-
-interface VoiceAssistantProps {
-  userName: string;
-}
 
 type Status = 'idle' | 'listening' | 'processing' | 'speaking';
 
-function VoiceAssistant({ userName }: VoiceAssistantProps) {
+function VoiceAssistant() {
   const [status, setStatus] = useState<Status>('idle');
   const [interimText, setInterimText] = useState('');
-  const [lastQuestion, setLastQuestion] = useState('');
-  const [lastAnswer, setLastAnswer] = useState('');
+  const [lastDomanda, setLastDomanda] = useState('');
+  const [lastRisposta, setLastRisposta] = useState('');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [error, setError] = useState('');
   const processingRef = useRef(false);
+  const pendingTextRef = useRef('');
+  const statusRef = useRef(status);
+  statusRef.current = status;
 
   const refreshConversations = useCallback(() => {
     setConversations(getConversations());
@@ -28,55 +27,97 @@ function VoiceAssistant({ userName }: VoiceAssistantProps) {
     refreshConversations();
   }, [refreshConversations]);
 
-  const handleFinal = useCallback(
+  const processText = useCallback(
     async (text: string) => {
       if (processingRef.current) return;
       processingRef.current = true;
 
+      pendingTextRef.current = '';
       setInterimText('');
-      setLastQuestion(text);
-      setLastAnswer('');
+      setLastDomanda(text);
+      setLastRisposta('');
       setStatus('processing');
 
-      const convId = addConversation(userName, text, null);
+      const convId = addConversation(text);
       refreshConversations();
 
       try {
-        const answer = await generateResponse(text);
-        setLastAnswer(answer);
+        const risposta = await generateResponse(text);
+        if (!processingRef.current) return;
+        setLastRisposta(risposta);
         setStatus('speaking');
 
-        updateAnswer(convId, answer);
+        updateRisposta(convId, risposta);
         refreshConversations();
 
-        await speak(answer);
+        await speak(risposta);
       } catch (err) {
+        if (!processingRef.current) return;
         setError(String(err));
-        setLastAnswer('[Errore nel contattare Ollama]');
+        setLastRisposta('[Errore nel contattare Ollama]');
       }
 
-      setStatus('listening');
-      processingRef.current = false;
+      if (processingRef.current) {
+        setStatus('listening');
+        processingRef.current = false;
+      }
     },
-    [userName, refreshConversations],
+    [refreshConversations],
+  );
+
+  const handleFinal = useCallback(
+    (text: string) => {
+      const currentStatus = statusRef.current;
+      if (currentStatus === 'speaking') {
+        stopSpeaking();
+        processingRef.current = false;
+        processText(text);
+        return;
+      }
+      if (currentStatus === 'processing') return;
+      processText(text);
+    },
+    [processText],
   );
 
   const handleInterim = useCallback((text: string) => {
     setInterimText(text);
+    pendingTextRef.current = text;
   }, []);
 
   function handleStart() {
     setError('');
     setInterimText('');
+    pendingTextRef.current = '';
     setStatus('listening');
     startListening({ onFinal: handleFinal, onInterim: handleInterim });
   }
 
   function handleStop() {
+    const pending = pendingTextRef.current;
+
+    if (status === 'speaking') {
+      stopSpeaking();
+      processingRef.current = false;
+      stopListening();
+      setInterimText('');
+      pendingTextRef.current = '';
+      setStatus('idle');
+      return;
+    }
+
+    if (status === 'processing') return;
+
     stopListening();
-    processingRef.current = false;
-    setInterimText('');
-    setStatus('idle');
+    pendingTextRef.current = '';
+
+    if (pending) {
+      setInterimText('');
+      processText(pending);
+    } else {
+      setInterimText('');
+      setStatus('idle');
+    }
   }
 
   const statusLabel = {
@@ -86,11 +127,13 @@ function VoiceAssistant({ userName }: VoiceAssistantProps) {
     speaking: 'Parla...',
   };
 
+  const buttonDisabled = status === 'processing';
+  const buttonLabel = status === 'processing' ? 'Elaborazione...' : 'Ferma';
+
   return (
     <div className="assistant-container">
       <header className="assistant-header">
         <h1>AudieVit</h1>
-        <p className="user-greeting">Benvenuto, <strong>{userName}</strong></p>
       </header>
 
       {error && <p className="error">{error}</p>}
@@ -115,19 +158,19 @@ function VoiceAssistant({ userName }: VoiceAssistantProps) {
           )}
         </div>
 
-        {interimText && (
+        {interimText && status === 'listening' && (
           <div className="message interim">
             <em>{interimText}</em>
           </div>
         )}
-        {lastQuestion && (
+        {lastDomanda && (
           <div className="message question">
-            <strong>Tu:</strong> {lastQuestion}
+            <strong>Tu:</strong> {lastDomanda}
           </div>
         )}
-        {lastAnswer && (
+        {lastRisposta && (
           <div className="message answer">
-            <strong>Assistente:</strong> {lastAnswer}
+            <strong>Assistente:</strong> {lastRisposta}
           </div>
         )}
       </section>
@@ -138,8 +181,8 @@ function VoiceAssistant({ userName }: VoiceAssistantProps) {
             Inizia Ascolto
           </button>
         ) : (
-          <button onClick={handleStop} className="btn-danger">
-            Ferma
+          <button onClick={handleStop} className="btn-danger" disabled={buttonDisabled}>
+            {buttonLabel}
           </button>
         )}
       </div>
@@ -153,10 +196,12 @@ function VoiceAssistant({ userName }: VoiceAssistantProps) {
             {conversations.map((c) => (
               <li key={c.id}>
                 <span className="timestamp">
-                  {new Date(c.created_at).toLocaleString('it-IT')}
+                  {new Date(c.orario).toLocaleString('it-IT')}
                 </span>
-                <span className="q"><strong>Q:</strong> {c.question}</span>
-                {c.answer && <span className="a"><strong>A:</strong> {c.answer}</span>}
+                <span className="q"><strong>Q:</strong> {c.domanda}</span>
+                {c.risposta_prima_parte && (
+                  <span className="a"><strong>R:</strong> {c.risposta_prima_parte}...</span>
+                )}
               </li>
             ))}
           </ul>
