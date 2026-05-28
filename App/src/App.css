@@ -1,16 +1,248 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
-  font-family: sans-serif;
-  margin: 40px;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #0f0f1a;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.2rem;
+  color: #888;
+}
+
+/* Login */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.login-card {
+  background: #1a1a2e;
+  padding: 2.5rem;
+  border-radius: 16px;
   text-align: center;
+  width: 360px;
 }
 
-button {
-  padding: 10px 24px;
-  font-size: 16px;
+.login-card h1 {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+  color: #fff;
+}
+
+.subtitle {
+  color: #888;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.login-card label {
+  display: block;
+  text-align: left;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.login-card input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #16213e;
+  color: #fff;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.login-card input:focus {
+  border-color: #0f3460;
+}
+
+.login-card button {
+  margin-top: 1rem;
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: #0f3460;
+  color: #fff;
+  font-size: 1rem;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
-button:disabled {
-  opacity: 0.5;
-  cursor: default;
+.login-card button:hover {
+  background: #1a5276;
+}
+
+.error {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+/* Assistant */
+.assistant-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.assistant-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.assistant-header h1 {
+  font-size: 1.8rem;
+  color: #fff;
+}
+
+.user-greeting {
+  color: #888;
+  margin-top: 0.25rem;
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-idle { background: #555; }
+.status-listening { background: #2ecc71; animation: pulse 1.5s infinite; }
+.status-processing { background: #f39c12; animation: pulse 1s infinite; }
+.status-speaking { background: #3498db; animation: pulse 1s infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.conversation {
+  background: #1a1a2e;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  min-height: 80px;
+}
+
+.message {
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+.message:last-child {
+  margin-bottom: 0;
+}
+
+.message strong {
+  color: #fff;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.btn-primary {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 8px;
+  background: #0f3460;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: #1a5276;
+}
+
+.btn-danger {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 8px;
+  background: #c0392b;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-danger:hover {
+  background: #e74c3c;
+}
+
+.history {
+  background: #1a1a2e;
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.history h2 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.empty {
+  color: #666;
+  font-style: italic;
+}
+
+.history ul {
+  list-style: none;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.history li {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #2a2a3e;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.history li:last-child {
+  border-bottom: none;
+}
+
+.timestamp {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.q, .a {
+  font-size: 0.9rem;
+  line-height: 1.4;
 }

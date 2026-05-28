@@ -1,7 +1,7 @@
 export function speak(text: string): Promise<void> {
   return new Promise((resolve) => {
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
+    utterance.lang = 'it-IT';
     utterance.rate = 1;
     utterance.onend = () => resolve();
     utterance.onerror = () => resolve();

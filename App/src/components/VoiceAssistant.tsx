@@ -1,74 +1,133 @@
-import { useState, useRef, useCallback } from 'react';
-import { loadModel, startListening, stopListening } from '../services/voiceClassifier';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { startListening, stopListening } from '../services/speechRecognition';
+import { generateResponse } from '../services/ollama';
 import { speak } from '../services/textToSpeech';
-import { getResponse } from '../services/responseGenerator';
+import { addConversation, updateAnswer, getConversations } from '../services/database';
+import type { Conversation } from '../types/database';
 
-type Status = 'idle' | 'loading' | 'ready' | 'listening' | 'speaking';
+interface VoiceAssistantProps {
+  userName: string;
+}
 
-function VoiceAssistant() {
+type Status = 'idle' | 'listening' | 'processing' | 'speaking';
+
+function VoiceAssistant({ userName }: VoiceAssistantProps) {
   const [status, setStatus] = useState<Status>('idle');
-  const [lastCommand, setLastCommand] = useState('');
-  const [lastResponse, setLastResponse] = useState('');
+  const [lastQuestion, setLastQuestion] = useState('');
+  const [lastAnswer, setLastAnswer] = useState('');
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [error, setError] = useState('');
-  const busyRef = useRef(false);
+  const processingRef = useRef(false);
 
-  const handleCommand = useCallback(async (word: string, confidence: number) => {
-    if (busyRef.current) return;
-    busyRef.current = true;
-
-    const response = getResponse(word);
-    setLastCommand(`${word} (${(confidence * 100).toFixed(0)}%)`);
-    setLastResponse(response);
-    setStatus('speaking');
-
-    await speak(response);
-    setStatus('listening');
-    busyRef.current = false;
+  const refreshConversations = useCallback(() => {
+    setConversations(getConversations());
   }, []);
 
-  const handleStart = useCallback(async () => {
-    setError('');
-    setStatus('loading');
+  useEffect(() => {
+    refreshConversations();
+  }, [refreshConversations]);
 
-    try {
-      await loadModel();
+  const handleTranscript = useCallback(
+    async (text: string) => {
+      if (processingRef.current) return;
+      processingRef.current = true;
+
+      setLastQuestion(text);
+      setLastAnswer('');
+      setStatus('processing');
+
+      const convId = addConversation(userName, text, null);
+      refreshConversations();
+
+      try {
+        const answer = await generateResponse(text);
+        setLastAnswer(answer);
+        setStatus('speaking');
+
+        updateAnswer(convId, answer);
+        refreshConversations();
+
+        await speak(answer);
+      } catch (err) {
+        setError(String(err));
+        setLastAnswer('[Errore nel contattare Ollama]');
+      }
+
       setStatus('listening');
-      await startListening(handleCommand);
-    } catch (err) {
-      setError(String(err));
-      setStatus('idle');
-    }
-  }, [handleCommand]);
+      processingRef.current = false;
+    },
+    [userName, refreshConversations],
+  );
 
-  const handleStop = useCallback(async () => {
-    await stopListening();
-    busyRef.current = false;
-    setStatus('ready');
-  }, []);
+  function handleStart() {
+    setError('');
+    setStatus('listening');
+    startListening(handleTranscript);
+  }
+
+  function handleStop() {
+    stopListening();
+    processingRef.current = false;
+    setStatus('idle');
+  }
 
   return (
-    <div>
-      <h2>AudieVit - Voice Assistant</h2>
+    <div className="assistant-container">
+      <header className="assistant-header">
+        <h1>AudieVit</h1>
+        <p className="user-greeting">Benvenuto, <strong>{userName}</strong></p>
+      </header>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="error">{error}</p>}
 
-      <div>
-        <p>Status: <strong>{status}</strong></p>
-        {lastCommand && <p>Command: <strong>{lastCommand}</strong></p>}
-        {lastResponse && <p>Response: <em>{lastResponse}</em></p>}
+      <div className="status-bar">
+        <span className={`status-dot status-${status}`} />
+        <span>{status === 'idle' ? 'In attesa' : status === 'listening' ? 'In ascolto...' : status === 'processing' ? 'Elaborazione...' : 'Parla...'}</span>
       </div>
 
-      <div style={{ marginTop: 16 }}>
-        {status === 'idle' || status === 'ready' ? (
-          <button onClick={handleStart}>
-            {status === 'ready' ? 'Restart' : 'Start Listening'}
+      <section className="conversation">
+        {lastQuestion && (
+          <div className="message question">
+            <strong>Tu:</strong> {lastQuestion}
+          </div>
+        )}
+        {lastAnswer && (
+          <div className="message answer">
+            <strong>Assistente:</strong> {lastAnswer}
+          </div>
+        )}
+      </section>
+
+      <div className="controls">
+        {status === 'idle' ? (
+          <button onClick={handleStart} className="btn-primary">
+            Inizia Ascolto
           </button>
         ) : (
-          <button onClick={handleStop} disabled={status === 'loading'}>
-            Stop
+          <button onClick={handleStop} className="btn-danger">
+            Ferma
           </button>
         )}
       </div>
+
+      <section className="history">
+        <h2>Cronologia</h2>
+        {conversations.length === 0 ? (
+          <p className="empty">Nessuna conversazione ancora.</p>
+        ) : (
+          <ul>
+            {conversations.map((c) => (
+              <li key={c.id}>
+                <span className="timestamp">
+                  {new Date(c.created_at).toLocaleString('it-IT')}
+                </span>
+                <span className="q"><strong>Q:</strong> {c.question}</span>
+                {c.answer && <span className="a"><strong>A:</strong> {c.answer}</span>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

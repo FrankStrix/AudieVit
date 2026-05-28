@@ -10,13 +10,13 @@
   },
   "dependencies": {
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "sql.js": "^1.14.1"
   },
   "devDependencies": {
-    "@tensorflow-models/speech-commands": "^0.5.4",
-    "@tensorflow/tfjs": "^4.22.0",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "@types/sql.js": "^1.4.11",
     "@vitejs/plugin-react": "^4.6.0",
     "typescript": "~5.8.3",
     "vite": "^7.0.4"
