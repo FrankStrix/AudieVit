@@ -11,6 +11,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/ollama/, ''),
       },
+      '/api/detect-language': {
+        target: 'https://FreeLanguageDetectionApi.vercel.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/detect-language/, '/detect_language'),
+      },
     },
   },
 });

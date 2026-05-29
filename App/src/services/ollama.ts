@@ -5,16 +5,16 @@ export async function generateResponse(
   onChunk?: (fullText: string) => void,
   history?: { role: string; content: string }[],
 ): Promise<string> {
-  const lang = detectLanguage(question);
+  const lang = await detectLanguage(question);
   const prompt = buildPrompt(question, history);
 
   const res = await fetch('/api/ollama/api/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'llama2',
+      model: 'qwen2.5:3b',
       prompt,
-      system: `Rispondi sempre in ${lang.name}. Sii conciso, risposte brevi ma giuste. sappi che la data e ora attuali sono: ${new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })} (ora italiana).`,
+      system: `Rispondi in ${lang.name}. Sii conciso, risposte brevi ma giuste. sappi che la data e ora attuali sono: ${new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })} (ora italiana).`,
       stream: true,
     }),
   });

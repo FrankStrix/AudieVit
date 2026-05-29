@@ -20,11 +20,11 @@ function sanitize(text: string): string {
     .trim();
 }
 
-export function speak(text: string, lang?: LangInfo): Promise<void> {
+export async function speak(text: string, lang?: LangInfo): Promise<void> {
   const clean = sanitize(text);
-  if (!clean) return Promise.resolve();
+  if (!clean) return;
 
-  const ttsLang = lang || detectLanguage(clean);
+  const ttsLang = lang || await detectLanguage(clean);
 
   return new Promise((resolve) => {
     if (speechSynthesis.speaking) {

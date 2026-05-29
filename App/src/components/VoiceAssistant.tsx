@@ -149,7 +149,7 @@ function VoiceAssistant() {
       ttsQueueRef.current = [];
       speakingRef.current = false;
       spokenOffsetRef.current = 0;
-      currentTtsLangRef.current = detectLanguage(text);
+      currentTtsLangRef.current = await detectLanguage(text);
       setMessages((prev) => [...prev, { id: -1, session_id: sid!, role: 'user', content: text, created_at: new Date().toISOString() }]);
       setStatus('processing');
 
@@ -336,7 +336,7 @@ function VoiceAssistant() {
             {view === 'chat' ? 'Cronologia' : 'Chat'}
           </button>
           <button className="btn-ghost" onClick={startNewSession}>Nuova chat</button>
-          <a href="#" target="_blank" rel="noopener noreferrer">Documentazione</a>
+          <a href="https://audie-vit.vercel.app/" target="_blank" rel="noopener noreferrer">Documentazione</a>
         </nav>
       </header>
 
